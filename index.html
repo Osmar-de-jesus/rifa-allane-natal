@@ -130,6 +130,59 @@ footer{text-align:center;padding:35px;color:#64748b}
  </div>
 
  <div class="adminPanel" id="adminPanel">
+   <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:16px;padding:18px;margin:15px 0 20px;">
+  <h3 style="margin-top:0;">➕ Cadastrar compra antiga</h3>
+
+  <p class="small">
+    Use esta área para cadastrar as pessoas que já compraram antes da nova versão do site.
+    O cadastro será feito como pago e o número ficará bloqueado.
+  </p>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;">
+
+    <input
+      id="manualNome"
+      type="text"
+      placeholder="Nome do comprador"
+      style="padding:12px;border:1px solid #cbd5e1;border-radius:10px;"
+    >
+
+    <input
+      id="manualTelefone"
+      type="text"
+      placeholder="WhatsApp"
+      style="padding:12px;border:1px solid #cbd5e1;border-radius:10px;"
+    >
+
+    <input
+      id="manualNumero"
+      type="text"
+      inputmode="numeric"
+      maxlength="3"
+      placeholder="Número (ex.: 008)"
+      style="padding:12px;border:1px solid #cbd5e1;border-radius:10px;"
+    >
+
+    <input
+      id="manualValor"
+      type="number"
+      step="0.01"
+      value="8"
+      placeholder="Valor"
+      style="padding:12px;border:1px solid #cbd5e1;border-radius:10px;"
+    >
+
+  </div>
+
+  <button
+    onclick="cadastrarCompraManual()"
+    style="margin-top:12px;background:#2563eb;color:white;border:0;border-radius:10px;padding:12px 18px;font-weight:700;cursor:pointer;"
+  >
+    ✅ Cadastrar compra
+  </button>
+
+  <div id="manualResultado" class="small" style="margin-top:10px;"></div>
+</div>
   <h2>📊 Planilha da Organizadora</h2>
   <p class="small">Aqui aparecem todos os registros, inclusive duplicidades antigas. A Lane pode confirmar pagamentos, trocar o número de uma compra e exportar a planilha.</p>
 
@@ -695,6 +748,67 @@ function parseCSVLine(line){
    ============================== */
 
 criarGrid();
+  async function cadastrarCompraManual() {
+  const nome = document.getElementById("manualNome").value.trim();
+  const telefone = document.getElementById("manualTelefone").value.trim();
+  const numero = document.getElementById("manualNumero").value.trim();
+  const valor = Number(document.getElementById("manualValor").value || 8);
+  const resultado = document.getElementById("manualResultado");
+
+  if (!nome) {
+    resultado.innerHTML = "⚠️ Informe o nome.";
+    return;
+  }
+
+  if (!telefone) {
+    resultado.innerHTML = "⚠️ Informe o WhatsApp.";
+    return;
+  }
+
+  if (!numero) {
+    resultado.innerHTML = "⚠️ Informe o número.";
+    return;
+  }
+
+  resultado.innerHTML = "⏳ Cadastrando...";
+
+  try {
+    const { data, error } = await db.rpc("admin_cadastrar_compra_manual", {
+      p_senha: SENHA_ADMIN,
+      p_nome: nome,
+      p_telefone: telefone,
+      p_numero: numero,
+      p_valor: valor
+    });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    if (!data || data.ok !== true) {
+      throw new Error(
+        data && data.erro
+          ? data.erro
+          : "Não foi possível cadastrar a compra."
+      );
+    }
+
+    resultado.innerHTML =
+      "✅ " + (data.mensagem || "Compra cadastrada com sucesso.");
+
+    document.getElementById("manualNome").value = "";
+    document.getElementById("manualTelefone").value = "";
+    document.getElementById("manualNumero").value = "";
+    document.getElementById("manualValor").value = "8";
+
+    await carregarAdmin();
+    await carregarNumeros();
+
+  } catch (erro) {
+    console.error(erro);
+    resultado.innerHTML = "❌ " + erro.message;
+  }
+}
 </script>
 
 </body>

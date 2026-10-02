@@ -359,12 +359,12 @@ async function gerarPix(){
 
   // A função SQL reservar_numeros retorna reserva_id/expira_em/numeros.
   // Não exigimos um campo "ok", porque a função atual não o retorna.
- if(!data){
-   throw new Error("O banco não retornou uma resposta.");
-}
-
-if(data.ok === false){
-   throw new Error(data.erro || "O banco recusou a reserva.");
+if(!data || data.ok !== true){
+   throw new Error(
+      (data && data.erro)
+      ? data.erro
+      : "O banco não confirmou a reserva."
+   );
 }
 
   reservaAtual=[...selecionados];

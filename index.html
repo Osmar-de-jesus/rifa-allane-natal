@@ -351,7 +351,7 @@ async function gerarPix(){
   const {data,error}=await db.rpc("reservar_numeros",{
    p_nome:nome,
    p_telefone:telefone,
-   p_numeros:selecionados.map(n=>Number(n)),
+   p_numeros:selecionados.map(n=>String(n).padStart(3,"0")),
    p_valor:Number((selecionados.length*PRECO).toFixed(2))
   });
 
